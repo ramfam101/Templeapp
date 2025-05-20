@@ -36,10 +36,6 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log("✅ Connected to MongoDB Atlas"))
 .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// Simple test route to verify server is running
-app.get("/api/ping", (req, res) => {
-    res.json({ message: "pong from backend" });
-});
 
 // TODO: Add your routes here
 // app.use('/api/schedule', require('./routes/schedule'));
