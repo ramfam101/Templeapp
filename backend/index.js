@@ -12,6 +12,11 @@ const app = express();
 // Middleware: enable CORS for cross-origin requests
 app.use(cors());
 
+app.use((req, res, next) => {
+  console.log(`📥 ${req.method} ${req.url}`);
+  next();
+});
+
 // Middleware: parse JSON request bodies
 app.use(express.json());
 
