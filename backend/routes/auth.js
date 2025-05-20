@@ -48,12 +48,20 @@ router.post("/login", async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: "2h" }
         );
+        
+        console.log("✅ Login Response:", {
+            token,
+            accountType: user.accountType,
+            name: `${user.firstName} ${user.lastName}`,
+        });
+
 
         res.json({
             token,
             accountType: user.accountType,
             name: `${user.firstName} ${user.lastName}`
         });
+        
     } catch (err) {
         res.status(500).json({ message: "Server error", error: err.message });
     }
