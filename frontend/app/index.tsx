@@ -1,24 +1,28 @@
 import { useState } from "react";
+import { useUser } from "../context/UserContext"
 import { View, TextInput, Button, Text, Alert } from "react-native";
 import { router } from "expo-router";
 import axios from "axios";
+
+
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
+  const {login} = useUser();
 
   const handleLogin = async () => {
     try {
+      console.log("befoe");
       const res = await axios.post(`${API_URL}/api/auth/login`, {
         email,
         password,
       });
+      console.log("after");
 
-
-      const { token, accountType } = res.data;
-
+      const { token, accountType , name} = res.data;
+      login({token, accountType, name})
       if (accountType === "admin" || accountType === "priest") {
         router.push("/admin");
       } else {

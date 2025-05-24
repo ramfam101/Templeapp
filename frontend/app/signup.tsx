@@ -15,6 +15,7 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     try {
+      console.log("here before")
       const res = await axios.post(`${API_URL}/api/auth/signup`, {
         firstName,
         lastName,
@@ -23,6 +24,7 @@ export default function SignupScreen() {
         password,
         accountType,
       });
+      console.log("here after")
 
       Alert.alert("Success", "Account created! Please login.");
       router.back(); // go back to login screen
