@@ -10,7 +10,7 @@ const UserSchema = new mongoose.Schema({
         type: String,
         enum: ["client", "admin", "priest"],
         default: "client"
-    }
+    },
 });
 
 module.exports = mongoose.model("User", UserSchema);

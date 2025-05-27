@@ -34,17 +34,12 @@ router.post("/signup", async (req, res) => {
 
 // POST /api/auth/login
 router.post("/login", async (req, res) => {
-    console.log("got here too?")
     const { email, password } = req.body;
-    console.log("erhem?")
     try {
-        console.log("here1")
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ message: "Invalid credentials" });
-        console.log("here2")
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
-        console.log("here3")
         const token = jwt.sign(
             { userId: user._id, accountType: user.accountType },
             process.env.JWT_SECRET,
@@ -53,8 +48,8 @@ router.post("/login", async (req, res) => {
         
         console.log("✅ Login Response:", {
             token,
-            accountType: user.accountType,
-            name: `${user.firstName} ${user.lastName}`,
+            // accountType: user.accountType,
+            // name: `${user.firstName} ${user.lastName}`,
         });
 
 
