@@ -2,6 +2,8 @@ import { createContext, useContext, useState, ReactNode, useEffect } from "react
 import AsyncStorage from "@react-native-async-storage/async-storage"; 
 import { router } from "expo-router"; 
 import { jwtDecode } from "jwt-decode";
+import { deleteSecureValue } from "@/utils/secureStore";
+
 
 type User = {
     name: string;
@@ -62,12 +64,12 @@ export function UserProvider({children}: {children: ReactNode}){
 
     // 🔧 edited here — clear stored info on logout
     const logout = async () => {
-        await AsyncStorage.removeItem("authToken");
-        await AsyncStorage.removeItem("accountType");
-        await AsyncStorage.removeItem("name");
+        await deleteSecureValue("authToken");
+        await deleteSecureValue("accountType");
+        await deleteSecureValue("name");
         setUser(null);
-        router.replace("/"); // back to login
-    };
+};
+
 
     return(
         <UserContext.Provider value = {{user, login, logout}}>
