@@ -7,29 +7,40 @@ const router = express.Router();
 
 // POST /api/auth/signup
 router.post("/signup", async (req, res) => {
-    const { firstName, lastName, dob, email, password, accountType } = req.body;
+  const { firstName, lastName, dob, email, password, accountType } = req.body;
 
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: "User already exists" });
 
-    try {
-        const existingUser = await User.findOne({ email });
-        if (existingUser) return res.status(400).json({ message: "User already exists" });
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      firstName,
+      lastName,
+      dob,
+      email,
+      password: hashedPassword,
+      accountType,
+    });
 
-        const newUser = new User({
-            firstName,
-            lastName,
-            dob,
-            email,
-            password: hashedPassword,
-            accountType
-        });
+    await newUser.save();
 
-        await newUser.save();
-        res.status(201).json({ message: "User created successfully" });
-    } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
-    }
+    // 🆕 Create token after signup
+    const token = jwt.sign(
+      { userId: newUser._id, accountType: newUser.accountType },
+      process.env.JWT_SECRET,
+      { expiresIn: "2h" }
+    );
+
+    res.status(201).json({
+      token,
+      accountType: newUser.accountType,
+      name: `${newUser.firstName} ${newUser.lastName}`,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
 });
 
 // POST /api/auth/login
