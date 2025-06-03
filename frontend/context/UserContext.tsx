@@ -1,86 +1,78 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage"; 
 import { router } from "expo-router"; 
 import { jwtDecode } from "jwt-decode";
-import { deleteSecureValue } from "@/utils/secureStore";
-
+import { saveSecureValue, getSecureValue, deleteSecureValue } from "@/utils/secureStore";
 
 type User = {
-    name: string;
-    accountType: string;
-    token: string;
+  name: string;
+  accountType: string;
+  token: string;
 } | null;
 
 type UserContextType = {
-    user: User;
-    login: (userData: User) => Promise<void>;
-    logout: () => Promise<void>;
+  user: User;
+  login: (userData: User) => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export function UserProvider({children}: {children: ReactNode}){
-    const [user, setUser] = useState<User>(null);
+export function UserProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User>(null);
 
-    useEffect(() => {
-  const loadUser = async () => {
-    const token = await AsyncStorage.getItem("authToken");
-    const accountType = await AsyncStorage.getItem("accountType");
-    const name = await AsyncStorage.getItem("name");
+  useEffect(() => {
+    const loadUser = async () => {
+      const token = await getSecureValue("authToken");
+      const accountType = await getSecureValue("accountType");
+      const name = await getSecureValue("name");
 
-    if (token && accountType && name) {
-      try {
-        const decoded: any = jwtDecode(token); // you'll need to import jwt-decode
-        const now = Date.now() / 1000; // current time in seconds
+      if (token && accountType && name) {
+        try {
+          const decoded: any = jwtDecode(token);
+          const now = Date.now() / 1000;
 
-        if (decoded.exp > now) {
-          setUser({ token, accountType, name });
-
-          // optional redirect if not already routed
-          router.replace("/");
-        } else {
-          console.log("🛑 Token expired");
-          await AsyncStorage.multiRemove(["authToken", "accountType", "name"]);
-          setUser(null);
-          router.replace("/login"); // force back to login
+          if (decoded.exp > now) {
+            setUser({ token, accountType, name });
+            router.replace("/");
+          } else {
+            console.log("🛑 Token expired");
+            await logout(); // unified cleanup
+          }
+        } catch (e) {
+          console.error("❌ Error decoding token:", e);
+          await logout();
         }
-      } catch (e) {
-        console.error("❌ Error decoding token:", e);
-        setUser(null);
       }
-    }
-  };
-
-  loadUser();
-}, []);
-    // 🔧 edited here — store token and user info on login
-    const login = async (userData: User) => {
-        if (!userData) return;
-        await AsyncStorage.setItem("authToken", userData.token);
-        await AsyncStorage.setItem("accountType", userData.accountType);
-        await AsyncStorage.setItem("name", userData.name);
-        setUser(userData);
     };
 
-    // 🔧 edited here — clear stored info on logout
-    const logout = async () => {
-        await deleteSecureValue("authToken");
-        await deleteSecureValue("accountType");
-        await deleteSecureValue("name");
-        setUser(null);
-};
+    loadUser();
+  }, []);
 
+  const login = async (userData: User) => {
+    if (!userData) return;
+    await saveSecureValue("authToken", userData.token);
+    await saveSecureValue("accountType", userData.accountType);
+    await saveSecureValue("name", userData.name);
+    setUser(userData);
+  };
 
-    return(
-        <UserContext.Provider value = {{user, login, logout}}>
-            {children}
-        </UserContext.Provider>
-    );
+  const logout = async () => {
+    await deleteSecureValue("authToken");
+    await deleteSecureValue("accountType");
+    await deleteSecureValue("name");
+    setUser(null);
+    router.replace("/login");
+  };
+
+  return (
+    <UserContext.Provider value={{ user, login, logout }}>
+      {children}
+    </UserContext.Provider>
+  );
 }
 
-export function useUser(){
-
-    const context = useContext(UserContext);
-    if(!context) throw new Error("not used within userProvider");
-    return context;
+export function useUser() {
+  const context = useContext(UserContext);
+  if (!context) throw new Error("not used within userProvider");
+  return context;
 }

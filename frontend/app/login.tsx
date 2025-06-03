@@ -28,7 +28,7 @@ export default function LoginScreen() {
         await saveSecureValue("name", name);
         await login({ token, accountType, name });
 
-        router.replace("/");
+        router.push("/");
     } 
         catch (err: any) {
         console.log(err?.response?.data || err.message);
